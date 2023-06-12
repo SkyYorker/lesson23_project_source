@@ -80,19 +80,19 @@ def data_unique_cmd1() -> list[str]:
     return data_unique
 
 
-def data_limit_cmd1(*args: Union[str, int] | None) -> list[str]:
+def data_limit_cmd1(*args: tuple[str] | None) -> list[str]:
     data_limit = sorted(open_file())
     data_limit = list(data_limit[0:int(args[0])])
     return data_limit
 
 
-def data_regex_cmd1(*args: Union[str, int] | None) -> list[str]:
+def data_regex_cmd1(*args: tuple[str] | None) -> list[str]:
     data_regex = re.compile(rf'{args[0]}')
     results = list(filter(data_regex.search, open_file()))
     return results
 
 
-def data_filter_cmd2(*args: Union[str, int] | None) -> list:
+def data_filter_cmd2(*args: tuple[str] | None) -> list:
     data_filter = list(filter(lambda file: args[0] in file, data_response_cmd1()))
     return data_filter
 
@@ -102,20 +102,20 @@ def data_map_cmd2(*args: tuple[str, int] | None) -> list[str]:
     return data_map
 
 
-def data_limit_cmd2(*args: Union[str, int] | None) -> list[str]:
+def data_limit_cmd2(*args: tuple[str] | None) -> list[str]:
     data_limit = sorted(data_response_cmd1())
     data_limit = list(data_limit[0:int(args[0])])
     return data_limit
 
 
-def data_unique_cmd2(*args: Union[str, int] | None) -> list[str]:
+def data_unique_cmd2(*args: tuple[str] | None) -> list[str]:
         data_unique = list(set(data_response_cmd1()))
         return data_unique
 
 
-def data_regex_cmd2(*args: Union[str, int] | None) -> list[str]:
-    rsponse = re.compile(rf'{args[0]}')
-    results = list(filter(rsponse.search, data_response_cmd1()))
+def data_regex_cmd2(*args: tuple[str] | None) -> list[str]:
+    data_regex = re.compile(rf'{args[0]}')
+    results = list(filter(data_regex.search, data_response_cmd1()))
     return results
 # # # #     # получить параметры query и file_name из request.args, при ошибке вернуть ошибку 400
 # # # #     # проверить, что файл file_name существует в папке DATA_DIR, при ошибке вернуть ошибку 400
