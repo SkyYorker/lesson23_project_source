@@ -1,4 +1,5 @@
 
+from os import PathLike
 from flask import Flask, request
 # from _typeshed import SupportsRichComparisonT
 from typing import Any, Callable, Generic, List, Iterable, Optional, Union, Tuple
@@ -14,11 +15,10 @@ DATA_DIR = "R:\Python\lesson23_project_source\data/apache_logs.txt"
 
 
 @app.route("/perform_query")
-def perform_query() -> Tuple[str, int]:
+def perform_query() -> tuple[str, int] | list[str]:
     cmd1 = request.args.get('cmd1')
     cmd2 = request.args.get('cmd2')
     try:
-            # return 'Что-то пошло не так', 400
         if cmd1 and cmd2 == None:
             return data_response_cmd1()
         elif cmd1 and cmd2:
@@ -30,81 +30,92 @@ def perform_query() -> Tuple[str, int]:
     
     
 
-def open_file() -> List[str]:
+def open_file() -> list:
     file_name = request.args.get('file_name')
     with open(file_name, 'r') as file:
         return list(file)
     
 
-def data_response_cmd1() -> Tuple[str, int]:
-    value1: Union[str, int, None] = request.args.get('value1')  
-    cmd1: Union[str, None] = request.args.get('cmd1')
+def data_response_cmd1() -> list[str]:
+    value1: Union[str, int] | None = request.args.get('value1')  
+    cmd1: Union[str, int] | None = request.args.get('cmd1')
     value_dict = {
         'filter': data_filter_cmd1,
         'map': data_map_cmd1,
         'unique': data_unique_cmd1,
-        'limit': data_limit_cmd1
+        'limit': data_limit_cmd1,
+        'regex': data_regex_cmd1
     }
     value = value_dict.get(cmd1)(value1,cmd1)
     
     return value
 
 
-def data_response_cmd2() -> Tuple[str, int]:
-    value2: Optional[str] = request.args.get('value2')
-    cmd2: Optional[str] = request.args.get('cmd2')
+def data_response_cmd2() -> list[str]:
+    value2: Union[str, int] | None = request.args.get('value2')
+    cmd2: Union[str, int] | None = request.args.get('cmd2')
     value_dict = {
         'filter': data_filter_cmd2,
         'map': data_map_cmd2,
         'unique': data_unique_cmd2,
-        'limit': data_limit_cmd2
+        'limit': data_limit_cmd2,
+        'regex': data_regex_cmd2
 
     }
-    value: Any = value_dict.get(cmd2)(value2,cmd2)
+    value = value_dict.get(cmd2)(value2,cmd2)
     return value
 
-def data_filter_cmd1(*args: Union[Tuple[str], None]) -> List[str]:
-    data_filter: List[str] = list(filter(lambda file: args[0] in file, open_file()))
+def data_filter_cmd1(*args: tuple[str] | None) -> list[str]:
+    data_filter = list(filter(lambda file: args[0] in file, open_file()))
     return data_filter
 
 
-def data_map_cmd1(*args: Union[Tuple[int], None]) -> List[str]:
-    data_map: List[str] = list(map(lambda i: i.split(' ')[int(args[0])], open_file()))
+def data_map_cmd1(*args: tuple[int] | None) -> list[str]:
+    data_map = list(map(lambda i: i.split(' ')[int(args[0])], open_file()))
     return data_map
         
 
-def data_unique_cmd1() -> List[str]:
+def data_unique_cmd1() -> list[str]:
     data_unique = list(set([i for i in open_file()]))
     return data_unique
 
 
-def data_limit_cmd1(*args: Union[Tuple[int], None]) -> List[str]:
+def data_limit_cmd1(*args: Union[str, int] | None) -> list[str]:
     data_limit = sorted(open_file())
     data_limit = list(data_limit[0:int(args[0])])
     return data_limit
 
 
-def data_filter_cmd2(*args: str) -> List[bool]:
+def data_regex_cmd1(*args: Union[str, int] | None) -> list[str]:
+    data_regex = re.compile(rf'{args[0]}')
+    results = list(filter(data_regex.search, open_file()))
+    return results
+
+
+def data_filter_cmd2(*args: Union[str, int] | None) -> list:
     data_filter = list(filter(lambda file: args[0] in file, data_response_cmd1()))
     return data_filter
 
-def data_map_cmd2(*args: int) -> List[str]:
-    data_map: List[str] = list(map(lambda i: i.split(' ')[int(args[0])], data_response_cmd1()))
+
+def data_map_cmd2(*args: tuple[str, int] | None) -> list[str]:
+    data_map = list(map(lambda i: i.split(' ')[int(args[0])], data_response_cmd1()))
     return data_map
 
-def data_limit_cmd2(*args):
+
+def data_limit_cmd2(*args: Union[str, int] | None) -> list[str]:
     data_limit = sorted(data_response_cmd1())
     data_limit = list(data_limit[0:int(args[0])])
     return data_limit
 
-def data_unique_cmd2(*args: str) -> List[object]:
+
+def data_unique_cmd2(*args: Union[str, int] | None) -> list[str]:
         data_unique = list(set(data_response_cmd1()))
         return data_unique
 
 
-def data_regex_cmd1(*args: str) -> List[str]:
+def data_regex_cmd2(*args: Union[str, int] | None) -> list[str]:
     rsponse = re.compile(rf'{args[0]}')
-    results: List[str] = list(filter(rsponse.search, open_file()))
+    results = list(filter(rsponse.search, data_response_cmd1()))
     return results
 # # # #     # получить параметры query и file_name из request.args, при ошибке вернуть ошибку 400
 # # # #     # проверить, что файл file_name существует в папке DATA_DIR, при ошибке вернуть ошибку 400
