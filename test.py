@@ -7,8 +7,9 @@ def open_file():
 
 
 def data_regex_cmd1(*args):
-    data_regex = re.compile(rf'{args[0]}')
+    new_str = args[0].replace(' ', '+')
+    data_regex = re.compile(rf'{new_str}')
     results = list(filter(data_regex.search, open_file()))
     return results
 
-print(data_regex_cmd1('images\/\w+\.png', 'regex'))
+print(data_regex_cmd1('images\\/\\w \\.png'))
