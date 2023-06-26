@@ -1,6 +1,8 @@
 
 from flask import Flask, request
 
+from typing import Callable, Mapping, Protocol, Sequence
+
 import re
 
 app = Flask(__name__)
@@ -11,14 +13,17 @@ DATA_DIR = "R:\Python\lesson23_project_source\data/apache_logs.txt"
 # BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # DATA_DIR = os.path.join(BASE_DIR, "data")
 
+class Handler(Protocol):
+    def __call__(self, *args) -> list[str]: # type: ignore
+        ...
+
 
 @app.route("/perform_query")
-def perform_query() -> tuple[str, int] | list[str]:
-    cmd1 = request.args.get('cmd1')
-    cmd2 = request.args.get('cmd2')
-    
+def perform_query() -> tuple[str, int] | list[str]: # type: ignore
     try:
-        if len(request.args) == 0:
+        cmd1 = request.args.get('cmd1')
+        cmd2 = request.args.get('cmd2')
+        if cmd1 == None and cmd2 == None:
            return 'Что-то пошло не так', 400      
         if cmd1 and cmd2 == None:            
             return data_response_cmd1()
@@ -26,6 +31,8 @@ def perform_query() -> tuple[str, int] | list[str]:
             return data_response_cmd2()
     except FileNotFoundError:
         return 'Файл не найден', 400
+    except KeyError:
+        return 'Такой команды не существует', 400
     except:
         return 'Что-то пошло не так', 400
     
@@ -40,30 +47,28 @@ def open_file() -> list[str]:
 def data_response_cmd1() -> list[str]:
     value1 = request.args['value1']
     cmd1 = request.args['cmd1']
-    value_dict = {
+    CMD_1_MAPPER: Mapping[str, Handler] = {
         'filter': data_filter_cmd1,
         'map': data_map_cmd1,
         'unique': data_unique_cmd1,
         'limit': data_limit_cmd1,
         'regex': data_regex_cmd1
-    }
-    value = value_dict[cmd1](value1,cmd1)
-    
+}
+    value = CMD_1_MAPPER[cmd1](value1,cmd1)
     return value
-
+    
 
 def data_response_cmd2() -> list[str]:
     value2 = request.args['value2']
     cmd2 = request.args['cmd2']
-    value_dict = {
-        'filter': data_filter_cmd2,
-        'map': data_map_cmd2,
-        'unique': data_unique_cmd2,
-        'limit': data_limit_cmd2,
-        'regex': data_regex_cmd2
-
-    }
-    value = value_dict[cmd2](value2,cmd2)
+    MD_2_MAPPER: Mapping[str, Handler] = {
+        'filter': data_filter_cmd1,
+        'map': data_map_cmd1,
+        'unique': data_unique_cmd1,
+        'limit': data_limit_cmd1,
+        'regex': data_regex_cmd1
+}
+    value = MD_2_MAPPER[cmd2](value2,cmd2)
     return value
 
 def data_filter_cmd1(*args: str) -> list[str]:
@@ -76,7 +81,7 @@ def data_map_cmd1(*args: int) -> list[str]:
     return data_map
         
 
-def data_unique_cmd1() -> list[str]:
+def data_unique_cmd1(*args: str) -> list[str]:
     data_unique = list(set([i for i in open_file()]))
     return data_unique
 
